@@ -1,20 +1,3 @@
-<?php
-session_start();
-
-if (
-    !isset($_SESSION['signedInEmail']) ||
-    $_SESSION['signedInEmail'] !== 'gg.suii999@gmail.com' ||
-    !isset($_SESSION['allowed']) ||
-    $_SESSION['allowed'] !== true
-) {
-    header('Location: 404.html');
-    exit();
-}
-
-// Optionally clear the allowed flag if you want one-time access:
-unset($_SESSION['allowed']);
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,7 +5,7 @@ unset($_SESSION['allowed']);
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Random Video Player</title>
+    <title>catbox</title>
  <script>
     history.replaceState(null, "", "/");
   </script>
