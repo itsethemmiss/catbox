@@ -1,0 +1,5 @@
+RewriteEngine On
+
+# If the requested file is an mp4, redirect to viewer.php or 404.html
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule \.mp4$ /redirect.php [L]
