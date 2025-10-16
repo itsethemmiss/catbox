@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>catbox</title>
-    <script>
-        history.replaceState(null, "", "/");
-    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
@@ -88,47 +85,7 @@
         </div>
     </div>
 
-    <!-- Username Selection Screen -->
-    <div id="usernameScreen" class="fixed inset-0 login-container flex items-center justify-center z-50 hidden">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span class="text-white text-xl font-bold" id="userInitial">?</span>
-                </div>
-                <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">Choose Your Username</h2>
-                <p class="text-gray-600 dark:text-gray-400" id="welcomeMessage">Welcome! Pick a unique username</p>
-            </div>
-            
-            <div class="mb-6">
-                <label for="usernameInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Username
-                </label>
-                <input 
-                    type="text" 
-                    id="usernameInput" 
-                    class="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-700 dark:text-white" 
-                    placeholder="Enter username"
-                    maxlength="20"
-                >
-                <div id="usernameError" class="text-red-500 text-sm mt-1 hidden"></div>
-                <div id="usernameSuccess" class="text-green-500 text-sm mt-1 hidden"></div>
-            </div>
-            
-            <button 
-                id="confirmUsernameBtn" 
-                class="w-full bg-primary hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled
-            >
-                Continue
-            </button>
-            
-            <div class="text-center mt-4">
-                <button id="signOutBtn" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
-                    Sign out
-                </button>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Main Video Container -->
     <div id="videoContainer" class="video-container relative w-full h-screen overflow-y-auto">
@@ -287,7 +244,7 @@
             if (storedAuth) {
                 try {
                     const authData = JSON.parse(storedAuth);
-                    if (authData.username && authData.googleId && authData.name && authData.email) {
+                    if (authData.googleId && authData.name && authData.email) {
                         currentUser = authData;
                         isAuthenticated = true;
                         showMainApp();
@@ -300,62 +257,11 @@
             return false;
         }
 
-        // API Configuration - Replace with your backend URL
-        const API_BASE_URL = 'https://your-backend-api.com/api';
+        // Supabase Configuration - Replace with your actual values
+        const SUPABASE_URL = 'https://your-project-id.supabase.co';
+        const SUPABASE_ANON_KEY = 'your-anon-key-here';
         
-        // Mock backend for demonstration - Replace with real API calls
-        const mockBackend = {
-            async getUserByGoogleId(googleId) {
-                // In a real app, this would be: fetch(`${API_BASE_URL}/users/${googleId}`)
-                const users = JSON.parse(localStorage.getItem('catbox_global_users') || '{}');
-                return users[googleId] || null;
-            },
-            
-            async createUser(userData) {
-                // In a real app, this would be: fetch(`${API_BASE_URL}/users`, { method: 'POST', body: JSON.stringify(userData) })
-                const users = JSON.parse(localStorage.getItem('catbox_global_users') || '{}');
-                users[userData.googleId] = userData;
-                localStorage.setItem('catbox_global_users', JSON.stringify(users));
-                return userData;
-            },
-            
-            async checkUsernameExists(username) {
-                // In a real app, this would be: fetch(`${API_BASE_URL}/users/check-username/${username}`)
-                const users = JSON.parse(localStorage.getItem('catbox_global_users') || '{}');
-                return Object.values(users).some(user => user.username.toLowerCase() === username.toLowerCase());
-            }
-        };
 
-        // Inappropriate words filter
-        const inappropriateWords = [
-            'fuck', 'shit', 'bitch', 'ass', 'damn', 'hell', 'crap', 'piss', 'cock', 'dick', 
-            'pussy', 'whore', 'slut', 'faggot', 'nigger', 'nazi', 'hitler', 'kill', 'death',
-            'sex', 'porn', 'xxx', 'anal', 'oral', 'cum', 'orgasm', 'rape', 'murder', 'suicide'
-        ];
-
-        function isUsernameAppropriate(username) {
-            const lowerUsername = username.toLowerCase();
-            return !inappropriateWords.some(word => lowerUsername.includes(word));
-        }
-
-        function isUsernameValid(username) {
-            // Check length (3-20 characters)
-            if (username.length < 3 || username.length > 20) {
-                return { valid: false, message: 'Username must be 3-20 characters long' };
-            }
-            
-            // Check for valid characters (alphanumeric and underscore)
-            if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-                return { valid: false, message: 'Username can only contain letters, numbers, and underscores' };
-            }
-            
-            // Check for inappropriate content
-            if (!isUsernameAppropriate(username)) {
-                return { valid: false, message: 'Please choose an appropriate username' };
-            }
-            
-            return { valid: true };
-        }
 
         // Google Sign-In callback
         async function handleCredentialResponse(response) {
@@ -363,56 +269,34 @@
                 // Decode JWT token (basic parsing)
                 const payload = JSON.parse(atob(response.credential.split('.')[1]));
                 
-                // Store temporary Google data
-                const googleData = {
+                // Create user data from Google
+                currentUser = {
                     googleId: payload.sub,
                     name: payload.name,
                     email: payload.email,
                     picture: payload.picture
                 };
                 
-                // Check if user already exists in the global database
-                const existingUser = await mockBackend.getUserByGoogleId(googleData.googleId);
+                isAuthenticated = true;
                 
-                if (existingUser) {
-                    // User exists, log them in directly
-                    currentUser = existingUser;
-                    isAuthenticated = true;
-                    
-                    // Store in local storage for this session
-                    localStorage.setItem('catbox_auth', JSON.stringify(currentUser));
-                    
-                    // Go straight to main app
-                    showMainApp();
-                } else {
-                    // New user, show username selection screen
-                    showUsernameScreen(googleData);
-                }
+                // Store in local storage for this session
+                localStorage.setItem('catbox_auth', JSON.stringify(currentUser));
+                
+                // Go straight to main app
+                showMainApp();
             } catch (error) {
                 console.error('Error during Google Sign-In:', error);
                 showCustomAlert('Failed to sign in. Please try again.');
             }
         }
 
-        function showUsernameScreen(googleData) {
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('usernameScreen').classList.remove('hidden');
-            
-            // Set user initial
-            const initial = googleData.name.charAt(0).toUpperCase();
-            document.getElementById('userInitial').textContent = initial;
-            document.getElementById('welcomeMessage').textContent = `Welcome ${googleData.name.split(' ')[0]}! Pick a unique username`;
-            
-            // Store temp data for later use
-            window.tempGoogleData = googleData;
-        }
+
 
         function showMainApp() {
             document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('usernameScreen').classList.add('hidden');
             
             // Update UI with user info
-            document.getElementById('usernameDisplay').textContent = `@${currentUser.username}`;
+            document.getElementById('usernameDisplay').textContent = currentUser.name.split(' ')[0]; // First name only
             document.getElementById('profileInitial').textContent = currentUser.name.charAt(0).toUpperCase();
             document.getElementById('profileName').textContent = currentUser.name;
             document.getElementById('profileEmail').textContent = currentUser.email;
@@ -428,7 +312,6 @@
             
             // Reset UI
             document.getElementById('loginScreen').classList.remove('hidden');
-            document.getElementById('usernameScreen').classList.add('hidden');
             document.getElementById('profileMenu').classList.add('hidden');
             
             // Reset video app
@@ -438,81 +321,7 @@
             currentActiveVideo = null;
         }
 
-        // Username input handling with real-time checking
-        document.getElementById('usernameInput').addEventListener('input', async function(e) {
-            const username = e.target.value.trim();
-            const confirmBtn = document.getElementById('confirmUsernameBtn');
-            const errorDiv = document.getElementById('usernameError');
-            const successDiv = document.getElementById('usernameSuccess');
-            
-            // Hide previous messages
-            errorDiv.classList.add('hidden');
-            successDiv.classList.add('hidden');
-            
-            if (username.length === 0) {
-                confirmBtn.disabled = true;
-                return;
-            }
-            
-            const validation = isUsernameValid(username);
-            
-            if (!validation.valid) {
-                errorDiv.textContent = validation.message;
-                errorDiv.classList.remove('hidden');
-                confirmBtn.disabled = true;
-            } else {
-                // Check if username already exists globally
-                try {
-                    const exists = await mockBackend.checkUsernameExists(username);
-                    if (exists) {
-                        errorDiv.textContent = 'Username is already taken';
-                        errorDiv.classList.remove('hidden');
-                        confirmBtn.disabled = true;
-                    } else {
-                        successDiv.textContent = 'Username is available!';
-                        successDiv.classList.remove('hidden');
-                        confirmBtn.disabled = false;
-                    }
-                } catch (error) {
-                    console.error('Error checking username:', error);
-                    errorDiv.textContent = 'Error checking username availability';
-                    errorDiv.classList.remove('hidden');
-                    confirmBtn.disabled = true;
-                }
-            }
-        });
 
-        // Confirm username
-        document.getElementById('confirmUsernameBtn').addEventListener('click', async function() {
-            const username = document.getElementById('usernameInput').value.trim();
-            const validation = isUsernameValid(username);
-            
-            if (validation.valid && window.tempGoogleData) {
-                try {
-                    // Create user object
-                    currentUser = {
-                        ...window.tempGoogleData,
-                        username: username
-                    };
-                    
-                    // Save to global database
-                    await mockBackend.createUser(currentUser);
-                    
-                    // Store in localStorage for this session
-                    localStorage.setItem('catbox_auth', JSON.stringify(currentUser));
-                    isAuthenticated = true;
-                    
-                    // Clean up temp data
-                    delete window.tempGoogleData;
-                    
-                    // Show main app
-                    showMainApp();
-                } catch (error) {
-                    console.error('Error creating user:', error);
-                    showCustomAlert('Failed to create account. Please try again.');
-                }
-            }
-        });
 
         // Custom alert function (since alert() is not allowed)
         function showCustomAlert(message) {
@@ -529,8 +338,7 @@
             document.body.appendChild(modal);
         }
 
-        // Sign out buttons
-        document.getElementById('signOutBtn').addEventListener('click', signOut);
+        // Sign out button
         document.getElementById('signOutProfileBtn').addEventListener('click', signOut);
 
         // Profile menu toggle
